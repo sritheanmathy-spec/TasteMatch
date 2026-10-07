@@ -40,57 +40,57 @@ type Question = {
 const QUIZ_QUESTIONS: Question[] = [
   {
     id: 1,
-    question: "Exam stress strikes! What is your survival fuel?",
-    subtitle: "Your pressure response reveals your internal core",
+    question: "Recess with ₹100 pocket money! What's your winning order?",
+    subtitle: "Your resource allocation reveals your economic instinct",
     options: [
-      { emoji: "🍕", text: "Double Cheese Pizza (Pure comfort therapy)", traits: { chill: 3, sweet: 1 } },
-      { emoji: "🍫", text: "Choco Lava Brownie (Sugar rush to the brain)", traits: { sweet: 3, ambition: 1 } },
-      { emoji: "🌶️", text: "Extra Spicy Peri Fries (Spice keeps me awake)", traits: { rebel: 3, ambition: 1 } },
-      { emoji: "☕", text: "Chilled Cold Coffee (Maximum hustle focus)", traits: { ambition: 3, rebel: 1 } },
+      { emoji: "🍟", text: "Peri-Peri Fries (Max spice & crunch satisfaction)", traits: { rebel: 3, ambition: 1 } },
+      { emoji: "💧", text: "6 Pani Puris + Extra Sukha Puri (Street king for ₹60)", traits: { chill: 3, rebel: 1 } },
+      { emoji: "🍔", text: "Split a double burger with your bench partner (Teamwork)", traits: { sweet: 3, chill: 1 } },
+      { emoji: "☕", text: "Iced Cold Coffee (Caffeine stamina for the next 3 classes)", traits: { ambition: 3, sweet: 1 } },
     ],
   },
   {
     id: 2,
-    question: "Your gang can't decide where to eat. What do you do?",
-    subtitle: "Your squad dynamic reveals your leadership style",
+    question: "Exam tomorrow morning! It's 11 PM and your brain is tired:",
+    subtitle: "Your emergency response under deadline pressure",
     options: [
-      { emoji: "👑", text: "Pick the place myself—someone has to lead!", traits: { ambition: 3, rebel: 2 } },
-      { emoji: "🧘", text: "Anywhere is cool, I just want good vibes", traits: { chill: 3 } },
-      { emoji: "🔍", text: "Inspect all Google reviews & star ratings first", traits: { ambition: 2, sweet: 2 } },
-      { emoji: "💡", text: "Recommend street food stalls for the adventure", traits: { rebel: 3, chill: 1 } },
+      { emoji: "🍫", text: "Dark Chocolate Brownie (Rapid glucose to memory centers)", traits: { sweet: 3, ambition: 1 } },
+      { emoji: "🍜", text: "2-Min Maggi with extra masala (Warm comfort morale booster)", traits: { chill: 3, rebel: 1 } },
+      { emoji: "🍕", text: "Leftover pizza slice (Zero prep, keep reading formulas)", traits: { ambition: 2, chill: 2 } },
+      { emoji: "🍎", text: "Water & fresh almonds (Disciplined focus, sleep on time)", traits: { chill: 3, ambition: 2 } },
     ],
   },
   {
     id: 3,
-    question: "You're dared to eat a dish with 5 ghost chillies!",
-    subtitle: "How you handle heat reflects your risk tolerance",
+    question: "School festival squad lunch! What role do you play in the order?",
+    subtitle: "Your squad role reveals your social intelligence",
     options: [
-      { emoji: "🔥", text: "First bite is mine! No hesitation!", traits: { rebel: 3, ambition: 2 } },
-      { emoji: "🥛", text: "Only if there's a big tub of ice cream ready", traits: { sweet: 2, chill: 2 } },
-      { emoji: "✋", text: "No thanks, I protect my peace and stomach", traits: { chill: 3 } },
-      { emoji: "📸", text: "I will record someone else eating it for the meme", traits: { sweet: 2, rebel: 2 } },
+      { emoji: "👑", text: "The Commander ('Follow me, I know the best stall deal!')", traits: { ambition: 3, rebel: 2 } },
+      { emoji: "🤝", text: "The Diplomat ('Let's order 4 dishes so everyone tastes!')", traits: { sweet: 3, chill: 2 } },
+      { emoji: "🔬", text: "The Analyst ('Check the star ratings & reviews first')", traits: { ambition: 2, sweet: 2 } },
+      { emoji: "💸", text: "The Calculator ('Calculating exact UPI split to 50 paise')", traits: { chill: 2, ambition: 3 } },
     ],
   },
   {
     id: 4,
-    question: "It's 2:00 AM on a Friday. What's your scene?",
-    subtitle: "Your nocturnal energy defines your creativity",
+    question: "Spicy food cafeteria challenge! A dish has 5 ghost chillies:",
+    subtitle: "Your physical risk appetite and pain threshold",
     options: [
-      { emoji: "🍜", text: "Making 2 AM Maggi and playing games", traits: { chill: 3, rebel: 1 } },
-      { emoji: "💤", text: "Deep sleep, peaceful and undisturbed", traits: { chill: 3, sweet: 1 } },
-      { emoji: "📱", text: "Group call roasting each other with snacks", traits: { sweet: 2, rebel: 2 } },
-      { emoji: "🚀", text: "Brainstorming crazy project or startup ideas", traits: { ambition: 3, rebel: 1 } },
+      { emoji: "🔥", text: "First bite is mine! Capsaicin gives an adrenaline high!", traits: { rebel: 3, ambition: 2 } },
+      { emoji: "🥛", text: "I'll do it, but only with a mango lassi backup", traits: { sweet: 2, chill: 2 } },
+      { emoji: "🙅", text: "I protect my stomach and peace of mind, no thanks", traits: { chill: 3 } },
+      { emoji: "📸", text: "I'll record the reaction video for the class group chat!", traits: { sweet: 2, rebel: 2 } },
     ],
   },
   {
     id: 5,
-    question: "If you had a food-based superpower, you'd choose:",
-    subtitle: "Your ultimate aspiration",
+    question: "What is your secret food-mindset superpower?",
+    subtitle: "The cognitive instinct driving your daily choices",
     options: [
-      { emoji: "⚡", text: "Infinite energy from a single French Fry", traits: { ambition: 3 } },
-      { emoji: "🧙", text: "Summoning free hot Biryani out of thin air", traits: { chill: 2, rebel: 2 } },
-      { emoji: "🛡️", text: "Zero spice burn and iron stomach armor", traits: { rebel: 3 } },
-      { emoji: "🍩", text: "Making anyone instantly happy with sweet treats", traits: { sweet: 3 } },
+      { emoji: "⚡", text: "Instant reboot: Savory food unlocks pure motivation", traits: { ambition: 3 } },
+      { emoji: "🧠", text: "Sensory memory: I remember great meals for months", traits: { sweet: 2, chill: 2 } },
+      { emoji: "🎁", text: "Generosity: I always save the crispiest fry for my buddy", traits: { sweet: 3 } },
+      { emoji: "🎯", text: "Radar instinct: I can spot a sub-par dish before ordering", traits: { rebel: 3 } },
     ],
   },
 ];
@@ -103,6 +103,9 @@ type PersonaResult = {
   strengths: string[];
   signatureDish: string;
   dishImage: string;
+  studyHack: string;
+  squadMatch: string;
+  budgetSecret: string;
   stats: {
     brainpower: number;
     chillFactor: number;
@@ -117,11 +120,14 @@ const PERSONAS: Record<string, PersonaResult> = {
     badge: "⚡ 100% AMBITIOUS",
     archetype: "The Driven Visionary",
     description:
-      "You thrive under pressure and turn late-night stress into pure momentum. You have big dreams, high focus, and food is your ultimate fuel for greatness.",
+      "You thrive under pressure and turn late-night stress into pure momentum. You have big academic goals, high focus, and food is your ultimate rocket fuel.",
     strengths: ["Laser Focus", "High Stamina", "Natural Leader"],
     signatureDish: "Iced Caramel Macchiato + Peri Peri Fries",
     dishImage:
       "https://images.unsplash.com/photo-1517256064527-09c73fc73e38?w=800&auto=format&fit=crop&q=80",
+    studyHack: "💡 Pre-Exam Hack: Avoid heavy carbs 1h before exams to prevent sugar crashes; combine black coffee with almonds for peak alertness.",
+    squadMatch: "🤝 Ideal Squad Partner: The Zen Comfort Seeker (balances your high-intensity drive).",
+    budgetSecret: "💰 Budget Winner: Cold Coffee + Fries under ₹180 gives maximum alertness per rupee.",
     stats: { brainpower: 96, chillFactor: 64, spiceDare: 88, socialEnergy: 82 },
   },
   rebel: {
@@ -129,11 +135,14 @@ const PERSONAS: Record<string, PersonaResult> = {
     badge: "🌶️ 100% FEARLESS",
     archetype: "The Adrenaline Seeker",
     description:
-      "Rules are suggestions, and mild food is boring! You love challenges, laugh in the face of spicy ghost chillies, and bring unmatched energy to your squad.",
+      "Rules are suggestions, and mild food is boring! You love challenges, laugh in the face of spicy ghost chillies, and bring magnetic energy to your squad.",
     strengths: ["Bold Risk-Taker", "Life of the Party", "Zero Hesitation"],
     signatureDish: "Steamed Kurkure Momos + Spicy Schezwan Noodles",
     dishImage:
       "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b4?w=800&auto=format&fit=crop&q=80",
+    studyHack: "💡 Pre-Exam Hack: Capsaicin in spicy food triggers endorphins that shake off sleepiness, but don't eat it immediately before an exam hall!",
+    squadMatch: "🤝 Ideal Squad Partner: The Sweet Strategist (keeps the squad united after your bold plans).",
+    budgetSecret: "💰 Budget Winner: Street Momos with spicy chutney (elite taste for ₹130).",
     stats: { brainpower: 84, chillFactor: 58, spiceDare: 99, socialEnergy: 95 },
   },
   chill: {
@@ -146,6 +155,9 @@ const PERSONAS: Record<string, PersonaResult> = {
     signatureDish: "Hyderabadi Dum Biryani + Crispy Ghee Dosa",
     dishImage:
       "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80",
+    studyHack: "💡 Pre-Exam Hack: Warm soups or comforting dal-rice stabilize serotonin, keeping your heart rate steady during high-pressure tests.",
+    squadMatch: "🤝 Ideal Squad Partner: The Midnight Hustler (pushes you to aim higher while you keep them calm).",
+    budgetSecret: "💰 Budget Winner: Ghee Masala Dosa (complete wholesome meal for ₹110).",
     stats: { brainpower: 88, chillFactor: 98, spiceDare: 60, socialEnergy: 78 },
   },
   sweet: {
@@ -158,6 +170,9 @@ const PERSONAS: Record<string, PersonaResult> = {
     signatureDish: "Molten Chocolate Lava Cake + Brown Sugar Boba",
     dishImage:
       "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&auto=format&fit=crop&q=80",
+    studyHack: "💡 Pre-Exam Hack: High-percentage dark chocolate increases cerebral blood flow and dopamine, boosting memory recall for formulas.",
+    squadMatch: "🤝 Ideal Squad Partner: The Flavor Rebel (they bring the hype, you bring the heart).",
+    budgetSecret: "💰 Budget Winner: Shareable Lava Cake (₹160 split by 2 = pure happiness).",
     stats: { brainpower: 92, chillFactor: 86, spiceDare: 65, socialEnergy: 94 },
   },
 };
@@ -448,6 +463,16 @@ export default function GamesScreen() {
                   <Text style={styles.signatureDishHeader}>🍽️ YOUR SIGNATURE SOUL FOOD</Text>
                   <Image source={{ uri: personaResult.dishImage }} style={styles.dishImageThumb} />
                   <Text style={styles.signatureDishName}>{personaResult.signatureDish}</Text>
+                </View>
+
+                {/* PRACTICAL STUDENT INSIGHTS */}
+                <View style={styles.practicalBox}>
+                  <Text style={styles.practicalBoxHeader}>💡 PRACTICAL STUDENT INSIGHTS</Text>
+                  <Text style={styles.practicalText}>{personaResult.studyHack}</Text>
+                  <View style={styles.practicalDivider} />
+                  <Text style={styles.practicalText}>{personaResult.squadMatch}</Text>
+                  <View style={styles.practicalDivider} />
+                  <Text style={styles.practicalText}>{personaResult.budgetSecret}</Text>
                 </View>
 
                 {/* RESET BUTTON */}
@@ -881,6 +906,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
     textAlign: "center",
+  },
+  practicalBox: {
+    width: "100%",
+    backgroundColor: COLORS.surfaceElevated,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: SPACING.xl,
+    borderWidth: 1,
+    borderColor: "rgba(245, 185, 66, 0.3)",
+  },
+  practicalBoxHeader: {
+    color: COLORS.accent,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginBottom: SPACING.sm,
+  },
+  practicalText: {
+    color: COLORS.text,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+  practicalDivider: {
+    height: 1,
+    backgroundColor: COLORS.borderLight,
+    marginVertical: SPACING.sm,
   },
   nextStudentButton: {
     width: "100%",

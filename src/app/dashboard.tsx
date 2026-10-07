@@ -24,7 +24,7 @@ import {
 
 import Rating from "../components/ui/Rating";
 import BottomNav from "../components/ui/BottomNav";
-import { MOCK_DISHES } from "../lib/mockData";
+import { MOCK_DISHES, FRIEND_VISITS } from "../lib/mockData";
 
 type Dish = {
   id: string | number;
@@ -577,6 +577,67 @@ export default function Dashboard() {
           </View>
         </Pressable>
 
+        {/* FRIEND BUZZ: Visited & Found Interesting */}
+        <View style={styles.friendBuzzSection}>
+          <View style={styles.friendBuzzHeader}>
+            <View>
+              <Text style={styles.friendBuzzBadge}>👥 FRIEND ACTIVITY</Text>
+              <Text style={styles.friendBuzzTitle}>Visited & Found Interesting</Text>
+            </View>
+            <Text style={styles.liveIndicator}>🟢 LIVE</Text>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.friendList}
+          >
+            {FRIEND_VISITS.map((visit) => (
+              <Pressable
+                key={visit.id}
+                style={styles.friendCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/restaurant",
+                    params: { id: String(visit.dishId) },
+                  })
+                }
+              >
+                <View style={styles.friendCardTop}>
+                  <Text style={styles.friendAvatar}>{visit.avatar}</Text>
+                  <View style={{ flex: 1, marginLeft: 8 }}>
+                    <Text style={styles.friendName}>{visit.friendName}</Text>
+                    <Text style={styles.friendGrade}>{visit.schoolGrade} • {visit.timeAgo}</Text>
+                  </View>
+                  <View style={styles.friendRatingBadge}>
+                    <Text style={styles.friendRatingText}>⭐ {visit.rating}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.reactionBadge}>
+                  <Text style={styles.reactionText}>{visit.reaction}</Text>
+                </View>
+
+                <Text style={styles.friendComment} numberOfLines={2}>
+                  "{visit.comment}"
+                </Text>
+
+                <View style={styles.friendDishRow}>
+                  <Image source={{ uri: visit.imageUrl }} style={styles.friendDishThumb} />
+                  <View style={{ flex: 1, marginLeft: 8 }}>
+                    <Text style={styles.friendDishName} numberOfLines={1}>
+                      {visit.dishName}
+                    </Text>
+                    <Text style={styles.friendRestaurantName} numberOfLines={1}>
+                      📍 {visit.restaurantName}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+
         {/* HERO */}
 
         <View style={styles.hero}>
@@ -1080,6 +1141,144 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
     letterSpacing: 0.5,
+  },
+
+  friendBuzzSection: {
+    marginBottom: SPACING.xxl,
+  },
+
+  friendBuzzHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: SPACING.xxl,
+    marginBottom: SPACING.md,
+  },
+
+  friendBuzzBadge: {
+    color: COLORS.accent,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginBottom: 2,
+  },
+
+  friendBuzzTitle: {
+    color: COLORS.white,
+    fontSize: 20,
+    fontWeight: "900",
+  },
+
+  liveIndicator: {
+    color: "#4ADE80",
+    fontSize: 11,
+    fontWeight: "800",
+    backgroundColor: "rgba(74, 222, 128, 0.15)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.round,
+  },
+
+  friendList: {
+    paddingHorizontal: SPACING.xxl,
+    gap: SPACING.md,
+  },
+
+  friendCard: {
+    width: 280,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.md,
+  },
+
+  friendCardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: SPACING.sm,
+  },
+
+  friendAvatar: {
+    fontSize: 28,
+  },
+
+  friendName: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  friendGrade: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+
+  friendRatingBadge: {
+    backgroundColor: "rgba(245, 185, 66, 0.15)",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: RADIUS.sm,
+  },
+
+  friendRatingText: {
+    color: COLORS.accent,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  reactionBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: COLORS.surfaceElevated,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.round,
+    marginBottom: SPACING.sm,
+  },
+
+  reactionText: {
+    color: COLORS.accent,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+
+  friendComment: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
+    fontStyle: "italic",
+    marginBottom: SPACING.md,
+  },
+
+  friendDishRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.surfaceElevated,
+    borderRadius: RADIUS.md,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+
+  friendDishThumb: {
+    width: 38,
+    height: 38,
+    borderRadius: RADIUS.sm,
+  },
+
+  friendDishName: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  friendRestaurantName: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+    fontWeight: "600",
   },
 
   header: {

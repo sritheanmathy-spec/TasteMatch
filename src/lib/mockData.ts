@@ -1,5 +1,20 @@
 // src/lib/mockData.ts
 
+export type FriendVisit = {
+  id: string;
+  friendName: string;
+  avatar: string;
+  schoolGrade: string;
+  dishName: string;
+  restaurantName: string;
+  reaction: string;
+  comment: string;
+  rating: number;
+  timeAgo: string;
+  dishId: number;
+  imageUrl: string;
+};
+
 export type MockDish = {
   id: number;
   name: string;
@@ -13,7 +28,87 @@ export type MockDish = {
   spice_level: number;
   sweetness_level: number;
   tag?: string;
+  studentBudgetRating?: string;
+  examStudyFuelScore?: number;
+  friendRecommendation?: {
+    friendName: string;
+    grade: string;
+    quote: string;
+  };
 };
+
+export const FRIEND_VISITS: FriendVisit[] = [
+  {
+    id: "fv-1",
+    friendName: "Rohan M.",
+    avatar: "🧑‍💻",
+    schoolGrade: "Class 11-A",
+    dishName: "Crispy Peri Peri Fries",
+    restaurantName: "The Fries Factory",
+    reaction: "🔥 Best Recess Snack",
+    comment: "Crunch is insane, and the garlic mayo balance is perfect for a 15-min break!",
+    rating: 5,
+    timeAgo: "25m ago",
+    dishId: 103,
+    imageUrl: "https://images.unsplash.com/photo-1576107232684-1279f3908594?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "fv-2",
+    friendName: "Priya Sharma",
+    avatar: "👩‍🎨",
+    schoolGrade: "Class 10-C",
+    dishName: "Double Cheese Burst Pizza",
+    restaurantName: "Crust & Craft",
+    reaction: "🧀 Cheese Pull Heaven",
+    comment: "Split this with 3 friends after math coaching. Absolute comfort food!",
+    rating: 5,
+    timeAgo: "1h ago",
+    dishId: 102,
+    imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "fv-3",
+    friendName: "Aryan K.",
+    avatar: "⚡",
+    schoolGrade: "Class 12-B",
+    dishName: "Steamed Kurkure Momos",
+    restaurantName: "Dragon Delights",
+    reaction: "🌶️ Spicy Wake-up Call",
+    comment: "The red garlic chutney is fiery! Instantly woke me up during evening study session.",
+    rating: 4.8,
+    timeAgo: "2h ago",
+    dishId: 104,
+    imageUrl: "https://images.unsplash.com/photo-1625220194771-7ebdea0b70b4?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "fv-4",
+    friendName: "Sneha Patel",
+    avatar: "✨",
+    schoolGrade: "Class 11-B",
+    dishName: "Molten Chocolate Lava Cake",
+    restaurantName: "Sweet Sin Bakery",
+    reaction: "🍫 Pure Exam Therapy",
+    comment: "Warm molten center cures any test stress. 10/10 would recommend!",
+    rating: 5,
+    timeAgo: "3h ago",
+    dishId: 105,
+    imageUrl: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "fv-5",
+    friendName: "Karthik R.",
+    avatar: "🏏",
+    schoolGrade: "Class 10-A",
+    dishName: "Hyderabadi Dum Biryani",
+    restaurantName: "Paradise Spice House",
+    reaction: "👑 Supreme Feast",
+    comment: "Celebrated after our sports match here. Huge portion, aromatic basmati rice!",
+    rating: 4.9,
+    timeAgo: "4h ago",
+    dishId: 101,
+    imageUrl: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop&q=80",
+  },
+];
 
 export const MOCK_DISHES: MockDish[] = [
   {
@@ -29,6 +124,13 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 4,
     sweetness_level: 1,
     tag: "Crowd Favorite 🔥",
+    studentBudgetRating: "Pocket Friendly (Splits easily)",
+    examStudyFuelScore: 92,
+    friendRecommendation: {
+      friendName: "Karthik R. (10-A)",
+      grade: "Class 10-A",
+      quote: "Best shared feast after exams!",
+    },
   },
   {
     id: 102,
@@ -43,6 +145,13 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 2,
     sweetness_level: 2,
     tag: "Cheesy Goodness 🧀",
+    studentBudgetRating: "Squad Favorite",
+    examStudyFuelScore: 88,
+    friendRecommendation: {
+      friendName: "Priya S. (10-C)",
+      grade: "Class 10-C",
+      quote: "Cheese pull is legendary!",
+    },
   },
   {
     id: 103,
@@ -57,6 +166,13 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 4,
     sweetness_level: 1,
     tag: "Snack King 🍟",
+    studentBudgetRating: "Under ₹150 Gold",
+    examStudyFuelScore: 85,
+    friendRecommendation: {
+      friendName: "Rohan M. (11-A)",
+      grade: "Class 11-A",
+      quote: "Top pick during 15-min break!",
+    },
   },
   {
     id: 104,
@@ -71,6 +187,13 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 5,
     sweetness_level: 1,
     tag: "Super Spicy 🌶️",
+    studentBudgetRating: "Budget Street Bite",
+    examStudyFuelScore: 90,
+    friendRecommendation: {
+      friendName: "Aryan K. (12-B)",
+      grade: "Class 12-B",
+      quote: "Chutney wakes you right up!",
+    },
   },
   {
     id: 105,
@@ -85,6 +208,13 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 1,
     sweetness_level: 5,
     tag: "Pure Joy 🍫",
+    studentBudgetRating: "Reward Treat",
+    examStudyFuelScore: 94,
+    friendRecommendation: {
+      friendName: "Sneha P. (11-B)",
+      grade: "Class 11-B",
+      quote: "Best exam relief dessert ever.",
+    },
   },
   {
     id: 106,
@@ -99,6 +229,8 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 2,
     sweetness_level: 2,
     tag: "Mega Crunchy 🍔",
+    studentBudgetRating: "Satisfying Meal",
+    examStudyFuelScore: 82,
   },
   {
     id: 107,
@@ -113,6 +245,8 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 4,
     sweetness_level: 1,
     tag: "Wok Tossed 🥢",
+    studentBudgetRating: "Big Portion Value",
+    examStudyFuelScore: 87,
   },
   {
     id: 108,
@@ -127,6 +261,8 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 3,
     sweetness_level: 1,
     tag: "Traditional Classic 🥞",
+    studentBudgetRating: "Under ₹120 Champion",
+    examStudyFuelScore: 95,
   },
   {
     id: 109,
@@ -141,6 +277,8 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 5,
     sweetness_level: 2,
     tag: "Street Hero 💧",
+    studentBudgetRating: "Pocket Change (₹60)",
+    examStudyFuelScore: 89,
   },
   {
     id: 110,
@@ -155,6 +293,8 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 1,
     sweetness_level: 4,
     tag: "Energy Booster ☕",
+    studentBudgetRating: "All-Nighter Fuel",
+    examStudyFuelScore: 98,
   },
   {
     id: 111,
@@ -169,6 +309,8 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 2,
     sweetness_level: 3,
     tag: "Comfort Feast 🍲",
+    studentBudgetRating: "Family/Squad Dinner",
+    examStudyFuelScore: 91,
   },
   {
     id: 112,
@@ -183,5 +325,7 @@ export const MOCK_DISHES: MockDish[] = [
     spice_level: 1,
     sweetness_level: 5,
     tag: "Viral Sensation 🧋",
+    studentBudgetRating: "Weekend Treat",
+    examStudyFuelScore: 86,
   },
 ];
