@@ -23,6 +23,8 @@ import {
 } from "../lib/theme";
 
 import Rating from "../components/ui/Rating";
+import BottomNav from "../components/ui/BottomNav";
+import { MOCK_DISHES } from "../lib/mockData";
 
 type Dish = {
   id: string | number;
@@ -89,13 +91,11 @@ export default function Dashboard() {
             .select("dish_id, rating, overall_rating"),
         ]);
 
-      if (dishesResult.error) {
+      if (dishesResult.error || !dishesResult.data || dishesResult.data.length === 0) {
         console.log(
-          "Dishes error:",
-          dishesResult.error.message
+          "Using rich fallback dishes database for stall presentation"
         );
-
-        setDishes([]);
+        setDishes(MOCK_DISHES as any);
       } else {
         setDishes(
           (dishesResult.data as Dish[]) || []
@@ -562,6 +562,21 @@ export default function Dashboard() {
           </Pressable>
         </View>
 
+        {/* STALL GAME BANNER */}
+        <Pressable
+          style={styles.stallBanner}
+          onPress={() => router.push("/games" as any)}
+        >
+          <View style={styles.stallBannerLeft}>
+            <Text style={styles.stallBannerBadge}>🎮 STALL ATTRACTION ZONE</Text>
+            <Text style={styles.stallBannerTitle}>Mindset & Food Games</Text>
+            <Text style={styles.stallBannerSubtitle}>Scanner • Spin Wheel • Food Clash</Text>
+          </View>
+          <View style={styles.stallBannerButton}>
+            <Text style={styles.stallBannerButtonText}>PLAY →</Text>
+          </View>
+        </Pressable>
+
         {/* HERO */}
 
         <View style={styles.hero}>
@@ -997,7 +1012,12 @@ export default function Dashboard() {
             start here.
           </Text>
         </View>
+
+        <View style={{ height: 80 }} />
       </ScrollView>
+
+      {/* FLOATING BOTTOM NAV */}
+      <BottomNav />
     </View>
   );
 }
@@ -1007,6 +1027,59 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor:
       COLORS.background,
+  },
+
+  stallBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(245, 185, 66, 0.12)",
+    borderWidth: 1.5,
+    borderColor: "rgba(245, 185, 66, 0.4)",
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    marginHorizontal: SPACING.xxl,
+    marginBottom: SPACING.xl,
+  },
+
+  stallBannerLeft: {
+    flex: 1,
+    paddingRight: SPACING.sm,
+  },
+
+  stallBannerBadge: {
+    color: COLORS.accent,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginBottom: 4,
+  },
+
+  stallBannerTitle: {
+    color: COLORS.white,
+    fontSize: 17,
+    fontWeight: "900",
+    marginBottom: 2,
+  },
+
+  stallBannerSubtitle: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+
+  stallBannerButton: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+  },
+
+  stallBannerButtonText: {
+    color: "#18181B",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.5,
   },
 
   header: {

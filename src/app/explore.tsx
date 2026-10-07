@@ -23,6 +23,9 @@ import {
   TYPOGRAPHY,
 } from "../lib/theme";
 
+import BottomNav from "../components/ui/BottomNav";
+import { MOCK_DISHES } from "../lib/mockData";
+
 
 type Dish = {
   id: string | number;
@@ -82,13 +85,9 @@ export default function ExploreScreen() {
           ascending: true,
         });
 
-      if (error) {
-        console.log(
-          "Explore dishes error:",
-          error.message
-        );
-
-        setDishes([]);
+      if (error || !data || data.length === 0) {
+        console.log("Using fallback dishes for explore screen");
+        setDishes(MOCK_DISHES as any);
         return;
       }
 
@@ -97,11 +96,11 @@ export default function ExploreScreen() {
       );
     } catch (error) {
       console.log(
-        "Unexpected error:",
+        "Unexpected error, using fallback dishes:",
         error
       );
 
-      setDishes([]);
+      setDishes(MOCK_DISHES as any);
     } finally {
       setLoading(false);
     }
@@ -913,6 +912,8 @@ export default function ExploreScreen() {
           </View>
         }
       />
+      {/* FLOATING BOTTOM NAV */}
+      <BottomNav />
     </View>
   );
 }

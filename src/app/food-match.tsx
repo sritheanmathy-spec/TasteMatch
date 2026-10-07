@@ -21,6 +21,8 @@ import {
 } from "../lib/theme";
 
 import PremiumCard from "../components/ui/PremiumCard";
+import BottomNav from "../components/ui/BottomNav";
+import { MOCK_DISHES } from "../lib/mockData";
 
 
 type Dish = {
@@ -300,17 +302,12 @@ export default function FoodMatchScreen() {
         );
 
 
-      if (dishError) {
-        console.log(
-          "Food Match dishes error:",
-          dishError
-        );
+      if (dishError || !dishData || dishData.length === 0) {
+        console.log("Using fallback dishes for food match");
+        setDishes(MOCK_DISHES as any);
+      } else {
+        setDishes(dishData);
       }
-
-
-      setDishes(
-        dishData || []
-      );
 
 
       const {
@@ -1384,6 +1381,8 @@ export default function FoodMatchScreen() {
 
       </ScrollView>
 
+      {/* FLOATING BOTTOM NAV */}
+      <BottomNav />
     </View>
 
   );
