@@ -115,9 +115,7 @@ export default function Dashboard() {
         );
       }
     } catch (error) {
-      console.log("Unexpected error:", error);
-
-      setDishes([]);
+      setDishes(MOCK_DISHES as any);
       setReviews([]);
     } finally {
       setLoading(false);

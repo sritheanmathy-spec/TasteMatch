@@ -342,12 +342,8 @@ export default function FoodMatchScreen() {
 
 
     } catch (error) {
-
-      console.log(
-        "Food Match loading error:",
-        error
-      );
-
+      setDishes(MOCK_DISHES as any);
+      setReviews([]);
     } finally {
 
       setLoading(false);
