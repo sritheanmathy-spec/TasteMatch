@@ -1,5 +1,5 @@
 // src/app/games.tsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Animated,
   Dimensions,
   Image,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { COLORS, RADIUS, SPACING } from "../lib/theme";
@@ -16,10 +17,10 @@ import BottomNav from "../components/ui/BottomNav";
 
 const { width } = Dimensions.get("window");
 
-type GameMode = "quiz" | "wheel" | "clash";
+type GameMode = "quiz" | "wheel" | "clash" | "memory";
 
 // ==========================================
-// QUIZ DATA & TYPES
+// 1. QUIZ DATA & TYPES
 // ==========================================
 type Question = {
   id: number;
@@ -178,21 +179,21 @@ const PERSONAS: Record<string, PersonaResult> = {
 };
 
 // ==========================================
-// WHEEL DATA
+// 2. WHEEL DATA
 // ==========================================
 const WHEEL_ITEMS = [
-  { text: "Hyderabadi Biryani 🍛", type: "dish", detail: "Royal feast! You deserve rich aromatic biryani today." },
-  { text: "STALL DARE: Tell your worst food story! 🎤", type: "dare", detail: "Share a hilarious food disaster with the stall crowd!" },
-  { text: "Cheesy Pizza 🍕", type: "dish", detail: "Cheese pull paradise! Grab a hot slice." },
-  { text: "STALL DARE: Staring contest with a friend! 👀", type: "dare", detail: "Challenge whoever is standing next to you. First to blink loses!" },
-  { text: "Kurkure Momos 🥟", type: "dish", detail: "Crispy outer crust with blazing red chutney!" },
-  { text: "STALL DARE: Describe Biryani in 3 words 🗣️", type: "dare", detail: "Describe it without using 'good', 'tasty', or 'nice'!" },
-  { text: "Choco Lava Cake 🍫", type: "dish", detail: "Warm molten chocolate goodness coming your way." },
-  { text: "STALL DARE: High-five 3 stall visitors! ✋", type: "dare", detail: "Spread the stall energy! High five 3 people around you!" },
+  { text: "Hyderabadi Biryani 🍛", type: "dish", detail: "Royal feast! You deserve rich aromatic biryani today.", color: "#F59E0B" },
+  { text: "STALL DARE: Tell your worst food story! 🎤", type: "dare", detail: "Share a hilarious food disaster with the stall crowd!", color: "#EF4444" },
+  { text: "Cheesy Pizza 🍕", type: "dish", detail: "Cheese pull paradise! Grab a hot slice.", color: "#3B82F6" },
+  { text: "STALL DARE: Staring contest with a friend! 👀", type: "dare", detail: "Challenge whoever is standing next to you. First to blink loses!", color: "#8B5CF6" },
+  { text: "Kurkure Momos 🥟", type: "dish", detail: "Crispy outer crust with blazing red chutney!", color: "#10B981" },
+  { text: "STALL DARE: Describe Biryani in 3 words 🗣️", type: "dare", detail: "Describe it without using 'good', 'tasty', or 'nice'!", color: "#EC4899" },
+  { text: "Choco Lava Cake 🍫", type: "dish", detail: "Warm molten chocolate goodness coming your way.", color: "#6366F1" },
+  { text: "STALL DARE: High-five 3 stall visitors! ✋", type: "dare", detail: "Spread the stall energy! High five 3 people around you!", color: "#14B8A6" },
 ];
 
 // ==========================================
-// FOOD CLASH DATA
+// 3. FOOD CLASH DATA
 // ==========================================
 const CLASH_ROUNDS = [
   {
@@ -227,24 +228,60 @@ const CLASH_ROUNDS = [
   },
 ];
 
+// ==========================================
+// 4. MEMORY BLITZ CARDS
+// ==========================================
+const MEMORY_ICONS = ["🍛", "🍕", "🥟", "🍫", "🍟", "🧋"];
+
+type CardItem = {
+  id: number;
+  icon: string;
+  isFlipped: boolean;
+  isMatched: boolean;
+};
+
+function generateMemoryCards(): CardItem[] {
+  const paired = [...MEMORY_ICONS, ...MEMORY_ICONS];
+  // Shuffle
+  for (let i = paired.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [paired[i], paired[j]] = [paired[j], paired[i]];
+  }
+  return paired.map((icon, idx) => ({
+    id: idx,
+    icon,
+    isFlipped: false,
+    isMatched: false,
+  }));
+}
+
 export default function GamesScreen() {
   const [activeTab, setActiveTab] = useState<GameMode>("quiz");
+  const [totalXp, setTotalXp] = useState(450);
 
-  // Quiz state
+  // 1. Quiz state
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [traitsScore, setTraitsScore] = useState({ ambition: 0, rebel: 0, chill: 0, sweet: 0 });
   const [personaResult, setPersonaResult] = useState<PersonaResult | null>(null);
 
-  // Wheel state
+  // 2. Wheel state
   const [spinning, setSpinning] = useState(false);
   const [wheelResult, setWheelResult] = useState<(typeof WHEEL_ITEMS)[0] | null>(null);
   const spinAnim = useRef(new Animated.Value(0)).current;
 
-  // Clash state
+  // 3. Clash state
   const [clashRound, setClashRound] = useState(0);
   const [clashVotes, setClashVotes] = useState<string[]>([]);
   const [selectedClashOption, setSelectedClashOption] = useState<"A" | "B" | null>(null);
   const [clashComplete, setClashComplete] = useState(false);
+
+  // 4. Memory Blitz state
+  const [cards, setCards] = useState<CardItem[]>(generateMemoryCards());
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [matchedPairs, setMatchedPairs] = useState(0);
+  const [movesCount, setMovesCount] = useState(0);
+  const [comboMultiplier, setComboMultiplier] = useState(1);
+  const [gameWon, setGameWon] = useState(false);
 
   // ==========================================
   // QUIZ LOGIC
@@ -257,11 +294,11 @@ export default function GamesScreen() {
       sweet: traitsScore.sweet + (option.traits.sweet || 0),
     };
     setTraitsScore(newTraits);
+    setTotalXp((prev) => prev + 25);
 
     if (currentQIndex + 1 < QUIZ_QUESTIONS.length) {
       setCurrentQIndex(currentQIndex + 1);
     } else {
-      // Calculate top trait
       let bestTrait: keyof typeof newTraits = "ambition";
       let maxScore = -1;
       (Object.keys(newTraits) as (keyof typeof newTraits)[]).forEach((trait) => {
@@ -271,6 +308,7 @@ export default function GamesScreen() {
         }
       });
       setPersonaResult(PERSONAS[bestTrait] || PERSONAS.ambition);
+      setTotalXp((prev) => prev + 150);
     }
   }
 
@@ -289,16 +327,17 @@ export default function GamesScreen() {
     setWheelResult(null);
 
     const randomIndex = Math.floor(Math.random() * WHEEL_ITEMS.length);
-    const targetDeg = 360 * 5 + randomIndex * (360 / WHEEL_ITEMS.length);
+    const targetDeg = 360 * 6 + randomIndex * (360 / WHEEL_ITEMS.length);
 
     spinAnim.setValue(0);
     Animated.timing(spinAnim, {
       toValue: targetDeg,
-      duration: 3200,
+      duration: 3500,
       useNativeDriver: true,
     }).start(() => {
       setSpinning(false);
       setWheelResult(WHEEL_ITEMS[randomIndex]);
+      setTotalXp((prev) => prev + 100);
     });
   }
 
@@ -308,6 +347,7 @@ export default function GamesScreen() {
   function handleClashVote(choice: "A" | "B") {
     if (selectedClashOption) return;
     setSelectedClashOption(choice);
+    setTotalXp((prev) => prev + 50);
 
     setTimeout(() => {
       const currentRoundData = CLASH_ROUNDS[clashRound];
@@ -320,6 +360,7 @@ export default function GamesScreen() {
         setClashRound(clashRound + 1);
       } else {
         setClashComplete(true);
+        setTotalXp((prev) => prev + 200);
       }
     }, 900);
   }
@@ -331,16 +372,84 @@ export default function GamesScreen() {
     setClashComplete(false);
   }
 
+  // ==========================================
+  // MEMORY BLITZ LOGIC
+  // ==========================================
+  function handleCardPress(index: number) {
+    if (cards[index].isFlipped || cards[index].isMatched || selectedIndices.length === 2) {
+      return;
+    }
+
+    const newCards = [...cards];
+    newCards[index].isFlipped = true;
+    setCards(newCards);
+
+    const newSelected = [...selectedIndices, index];
+    setSelectedIndices(newSelected);
+
+    if (newSelected.length === 2) {
+      setMovesCount((m) => m + 1);
+      const [idx1, idx2] = newSelected;
+
+      if (cards[idx1].icon === cards[idx2].icon) {
+        // MATCH!
+        setTimeout(() => {
+          newCards[idx1].isMatched = true;
+          newCards[idx2].isMatched = true;
+          setCards(newCards);
+          setSelectedIndices([]);
+          setMatchedPairs((p) => {
+            const next = p + 1;
+            if (next === 6) {
+              setGameWon(true);
+              setTotalXp((x) => x + 350 * comboMultiplier);
+            }
+            return next;
+          });
+          setComboMultiplier((c) => c + 1);
+          setTotalXp((x) => x + 80 * comboMultiplier);
+        }, 400);
+      } else {
+        // NO MATCH
+        setTimeout(() => {
+          newCards[idx1].isFlipped = false;
+          newCards[idx2].isFlipped = false;
+          setCards(newCards);
+          setSelectedIndices([]);
+          setComboMultiplier(1);
+        }, 900);
+      }
+    }
+  }
+
+  function resetMemoryGame() {
+    setCards(generateMemoryCards());
+    setSelectedIndices([]);
+    setMatchedPairs(0);
+    setMovesCount(0);
+    setComboMultiplier(1);
+    setGameWon(false);
+  }
+
   return (
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.push("/dashboard")} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </Pressable>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => router.push("/dashboard")} style={styles.backButton}>
+            <Text style={styles.backButtonText}>← Dashboard</Text>
+          </Pressable>
+          <View style={styles.xpPill}>
+            <Text style={styles.xpPillText}>🏆 XP: {totalXp}</Text>
+          </View>
+        </View>
+
         <View style={styles.titleContainer}>
-          <Text style={styles.badgeLabel}>⭐ STALL ATTRACTION ZONE ⭐</Text>
+          <Text style={styles.badgeLabel}>⭐ SCHOOL STALL ARCADIA ⭐</Text>
           <Text style={styles.headerTitle}>TasteMatch Arcade</Text>
+          <Text style={styles.headerSubtitle}>
+            Interactive food scanner, lucky spin, showdowns & reaction blitz!
+          </Text>
         </View>
       </View>
 
@@ -351,7 +460,7 @@ export default function GamesScreen() {
           onPress={() => setActiveTab("quiz")}
         >
           <Text style={[styles.tabItemText, activeTab === "quiz" && styles.activeTabItemText]}>
-            🧠 Mindset Scanner
+            🧠 Scanner
           </Text>
         </Pressable>
         <Pressable
@@ -359,7 +468,7 @@ export default function GamesScreen() {
           onPress={() => setActiveTab("wheel")}
         >
           <Text style={[styles.tabItemText, activeTab === "wheel" && styles.activeTabItemText]}>
-            🎡 Spin Craving
+            🎡 Spin Wheel
           </Text>
         </Pressable>
         <Pressable
@@ -368,6 +477,14 @@ export default function GamesScreen() {
         >
           <Text style={[styles.tabItemText, activeTab === "clash" && styles.activeTabItemText]}>
             🥊 Food Clash
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.tabItem, activeTab === "memory" && styles.activeTabItem]}
+          onPress={() => setActiveTab("memory")}
+        >
+          <Text style={[styles.tabItemText, activeTab === "memory" && styles.activeTabItemText]}>
+            ⚡ Blitz Match
           </Text>
         </Pressable>
       </View>
@@ -492,13 +609,13 @@ export default function GamesScreen() {
             <View style={styles.wheelHeaderBox}>
               <Text style={styles.wheelHeading}>🎡 Wheel of Craving & Dares</Text>
               <Text style={styles.wheelSubheading}>
-                Spin to test your food destiny or pull a hilarious challenge!
+                Spin to test your food destiny or pull a hilarious live stall challenge!
               </Text>
             </View>
 
             <View style={styles.wheelContainer}>
               <View style={styles.wheelPointer}>
-                <Text style={{ fontSize: 32 }}>🔻</Text>
+                <Text style={{ fontSize: 36 }}>🔻</Text>
               </View>
 
               <Animated.View
@@ -540,7 +657,7 @@ export default function GamesScreen() {
               disabled={spinning}
             >
               <Text style={styles.spinButtonText}>
-                {spinning ? "SPINNING DESTINY..." : "🎲 SPIN THE WHEEL!"}
+                {spinning ? "🎲 SPINNING DESTINY..." : "🎲 SPIN THE WHEEL (+100 XP)"}
               </Text>
             </Pressable>
 
@@ -636,6 +753,72 @@ export default function GamesScreen() {
           </View>
         )}
 
+        {/* ==============================================================
+            MODE 4: FLAVOR BLITZ (FOOD MEMORY MATCH)
+        ============================================================== */}
+        {activeTab === "memory" && (
+          <View style={styles.memoryWrapper}>
+            <View style={styles.memoryHeaderBox}>
+              <Text style={styles.memoryHeading}>⚡ Flavor Speed Blitz</Text>
+              <Text style={styles.memorySubheading}>
+                Match all 6 food pairs in minimum moves to unlock the Stall Grandmaster Badge!
+              </Text>
+
+              <View style={styles.memoryStatsBar}>
+                <View style={styles.memStatItem}>
+                  <Text style={styles.memStatLabel}>PAIRS</Text>
+                  <Text style={styles.memStatVal}>{matchedPairs} / 6</Text>
+                </View>
+                <View style={styles.memStatItem}>
+                  <Text style={styles.memStatLabel}>MOVES</Text>
+                  <Text style={styles.memStatVal}>{movesCount}</Text>
+                </View>
+                <View style={styles.memStatItem}>
+                  <Text style={styles.memStatLabel}>COMBO</Text>
+                  <Text style={[styles.memStatVal, { color: comboMultiplier > 1 ? "#F59E0B" : COLORS.white }]}>
+                    x{comboMultiplier} 🔥
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* CARD GRID */}
+            <View style={styles.cardGrid}>
+              {cards.map((card, idx) => {
+                const isOpen = card.isFlipped || card.isMatched;
+                return (
+                  <Pressable
+                    key={card.id}
+                    style={[
+                      styles.memoryCard,
+                      isOpen && styles.memoryCardOpen,
+                      card.isMatched && styles.memoryCardMatched,
+                    ]}
+                    onPress={() => handleCardPress(idx)}
+                  >
+                    <Text style={styles.memoryCardText}>
+                      {isOpen ? card.icon : "❓"}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {gameWon && (
+              <View style={styles.winBanner}>
+                <Text style={styles.winBadge}>🎉 STALL RECORD BROKEN!</Text>
+                <Text style={styles.winTitle}>Grandmaster Memory Completed!</Text>
+                <Text style={styles.winSubtitle}>
+                  You solved the grid in only {movesCount} moves! Claim your stall stickers!
+                </Text>
+                <Pressable style={styles.nextStudentButton} onPress={resetMemoryGame}>
+                  <Text style={styles.nextStudentButtonText}>⚡ PLAY AGAIN / NEXT STUDENT</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        )}
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -658,11 +841,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  backButton: {
-    alignSelf: "flex-start",
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: SPACING.xs,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+  },
+  backButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     backgroundColor: COLORS.surfaceLight,
     borderRadius: RADIUS.sm,
   },
@@ -670,6 +857,19 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 13,
     fontWeight: "700",
+  },
+  xpPill: {
+    backgroundColor: "rgba(245, 185, 66, 0.2)",
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.round,
+    borderWidth: 1,
+    borderColor: "rgba(245, 185, 66, 0.4)",
+  },
+  xpPillText: {
+    color: COLORS.accent,
+    fontSize: 13,
+    fontWeight: "900",
   },
   titleContainer: {
     marginTop: 4,
@@ -687,10 +887,15 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     letterSpacing: -0.5,
   },
+  headerSubtitle: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
   tabBar: {
     flexDirection: "row",
     backgroundColor: COLORS.surface,
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: SPACING.xs,
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -700,6 +905,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: "center",
     borderRadius: RADIUS.md,
+    marginHorizontal: 2,
   },
   activeTabItem: {
     backgroundColor: "rgba(245, 185, 66, 0.15)",
@@ -707,7 +913,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(245, 185, 66, 0.4)",
   },
   tabItemText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     color: COLORS.textMuted,
   },
@@ -1035,7 +1241,7 @@ const styles = StyleSheet.create({
   spinButton: {
     backgroundColor: COLORS.accent,
     paddingVertical: 16,
-    paddingHorizontal: 40,
+    paddingHorizontal: 30,
     borderRadius: RADIUS.round,
     marginBottom: SPACING.xl,
     shadowColor: COLORS.accent,
@@ -1049,7 +1255,7 @@ const styles = StyleSheet.create({
   },
   spinButtonText: {
     color: "#18181B",
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "900",
     letterSpacing: 1,
   },
@@ -1207,5 +1413,107 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 4,
+  },
+
+  // MEMORY BLITZ STYLES
+  memoryWrapper: {
+    width: "100%",
+  },
+  memoryHeaderBox: {
+    alignItems: "center",
+    marginBottom: SPACING.lg,
+  },
+  memoryHeading: {
+    color: COLORS.white,
+    fontSize: 22,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  memorySubheading: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    textAlign: "center",
+    marginBottom: SPACING.md,
+  },
+  memoryStatsBar: {
+    flexDirection: "row",
+    backgroundColor: COLORS.surfaceElevated,
+    borderRadius: RADIUS.lg,
+    paddingVertical: 10,
+    paddingHorizontal: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    gap: SPACING.xl,
+  },
+  memStatItem: {
+    alignItems: "center",
+  },
+  memStatLabel: {
+    color: COLORS.textMuted,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  memStatVal: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  cardGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  memoryCard: {
+    width: (width - SPACING.lg * 2 - 24) / 3,
+    height: 90,
+    backgroundColor: COLORS.surfaceElevated,
+    borderRadius: RADIUS.xl,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: COLORS.borderLight,
+  },
+  memoryCardOpen: {
+    borderColor: COLORS.accent,
+    backgroundColor: "rgba(245, 185, 66, 0.15)",
+  },
+  memoryCardMatched: {
+    borderColor: "#10B981",
+    backgroundColor: "rgba(16, 185, 129, 0.2)",
+  },
+  memoryCardText: {
+    fontSize: 32,
+  },
+  winBanner: {
+    marginTop: SPACING.xl,
+    backgroundColor: COLORS.surface,
+    borderWidth: 2,
+    borderColor: "#10B981",
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    alignItems: "center",
+  },
+  winBadge: {
+    color: "#10B981",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginBottom: 4,
+  },
+  winTitle: {
+    color: COLORS.white,
+    fontSize: 20,
+    fontWeight: "900",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  winSubtitle: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    textAlign: "center",
+    marginBottom: SPACING.lg,
   },
 });
