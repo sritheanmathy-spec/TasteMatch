@@ -1,193 +1,124 @@
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+// src/app/favorites.tsx
+import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  View,
+  Text,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
 } from "react-native";
-import { supabase } from "../lib/supabase";
-
-type FavoriteDish = {
-  id: number;
-  name: string;
-  restaurant_name: string;
-  category: string;
-  description: string;
-  image_url: string | null;
-};
+import { router } from "expo-router";
+import { backend } from "../lib/backend";
+import { MockDish } from "../lib/mockData";
+import { COLORS, RADIUS, SPACING } from "../lib/theme";
+import BottomNav from "../components/ui/BottomNav";
 
 export default function FavoritesScreen() {
-  const [dishes, setDishes] = useState<FavoriteDish[]>([]);
+  const [favorites, setFavorites] = useState<MockDish[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadFavorites();
   }, []);
 
-  const loadFavorites = async () => {
-    try {
-      setLoading(true);
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.replace("/");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("favorites")
-        .select(`
-          dish_id,
-          dishes (
-            id,
-            name,
-            restaurant_name,
-            category,
-            description,
-            image_url
-          )
-        `)
-        .eq("user_id", user.id);
-
-      if (error) {
-        console.log("Favorites error:", error);
-        return;
-      }
-
-      const favoriteDishes = (data || [])
-        .map((item: any) => item.dishes)
-        .filter(Boolean);
-
-      setDishes(favoriteDishes);
-    } catch (error) {
-      console.log("Error loading favorites:", error);
-    } finally {
-      setLoading(false);
-    }
+  const loadFavorites = () => {
+    setLoading(true);
+    const list = backend.getFavoriteDishes();
+    setFavorites(list);
+    setLoading(false);
   };
 
-  const openDish = (dishId: number) => {
-    router.push({
-      pathname: "/restaurant",
-      params: { id: String(dishId) },
-    });
+  const removeFavorite = (dishId: number) => {
+    backend.toggleFavorite(dishId);
+    setFavorites(backend.getFavoriteDishes());
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Loading your favorites...</Text>
+  const renderFavoriteItem = ({ item }: { item: MockDish }) => (
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.8}
+      onPress={() =>
+        router.push({
+          pathname: "/restaurant",
+          params: { id: String(item.id) },
+        })
+      }
+    >
+      <Image source={{ uri: item.image_url }} style={styles.dishImage} />
+      <View style={styles.cardContent}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.category}>{item.category.toUpperCase()}</Text>
+          <TouchableOpacity
+            style={styles.heartButton}
+            onPress={() => removeFavorite(item.id)}
+          >
+            <Text style={styles.heartIcon}>❤️</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.dishName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={styles.restaurantName} numberOfLines={1}>
+          📍 {item.restaurant_name}
+        </Text>
+
+        <View style={styles.cardFooter}>
+          <Text style={styles.ratingText}>⭐ {item.averageRating} ({item.reviewCount})</Text>
+          {item.price ? <Text style={styles.priceText}>{item.price}</Text> : null}
+        </View>
       </View>
-    );
-  }
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backText}>‹</Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-
-        <View>
-          <Text style={styles.title}>My Favorites</Text>
-          <Text style={styles.subtitle}>
-            {dishes.length} saved dish{dishes.length !== 1 ? "es" : ""}
-          </Text>
-        </View>
+        <Text style={styles.headerBadge}>⭐ SAVED COLLECTION</Text>
+        <Text style={styles.headerTitle}>My Favorites</Text>
+        <Text style={styles.headerSubtitle}>
+          Dishes you have bookmarked for your next food run
+        </Text>
       </View>
 
-      {/* EMPTY STATE */}
-      {dishes.length === 0 ? (
+      {/* CONTENT */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.accent} />
+          <Text style={styles.loadingText}>Loading saved dishes...</Text>
+        </View>
+      ) : favorites.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyHeart}>♡</Text>
-
-          <Text style={styles.emptyTitle}>
-            No favorites yet
+          <Text style={styles.emptyIcon}>🍽️</Text>
+          <Text style={styles.emptyTitle}>NO SAVED DISHES YET</Text>
+          <Text style={styles.emptySubtitle}>
+            Browse dishes in Feed or Explore, and tap the heart to save them here!
           </Text>
-
-          <Text style={styles.emptyText}>
-            Save dishes you love and they will appear here.
-          </Text>
-
           <TouchableOpacity
             style={styles.exploreButton}
             onPress={() => router.push("/explore")}
           >
-            <Text style={styles.exploreButtonText}>
-              Explore Dishes
-            </Text>
+            <Text style={styles.exploreButtonText}>EXPLORE DISHES →</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <FlatList
-          data={dishes}
+          data={favorites}
           keyExtractor={(item) => String(item.id)}
+          renderItem={renderFavoriteItem}
+          contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.card}
-              activeOpacity={0.85}
-              onPress={() => openDish(item.id)}
-            >
-              {item.image_url ? (
-                <Image
-                  source={{ uri: item.image_url }}
-                  style={styles.image}
-                />
-              ) : (
-                <View style={styles.imagePlaceholder}>
-                  <Text style={styles.placeholderText}>
-                    🍽
-                  </Text>
-                </View>
-              )}
-
-              <View style={styles.cardContent}>
-                <Text style={styles.category}>
-                  {item.category || "FOOD"}
-                </Text>
-
-                <Text style={styles.dishName}>
-                  {item.name}
-                </Text>
-
-                <Text style={styles.restaurant}>
-                  {item.restaurant_name}
-                </Text>
-
-                <Text
-                  style={styles.description}
-                  numberOfLines={2}
-                >
-                  {item.description || "No description available."}
-                </Text>
-
-                <TouchableOpacity
-                  style={styles.viewButton}
-                  onPress={() => openDish(item.id)}
-                >
-                  <Text style={styles.viewButtonText}>
-                    View Dish →
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          )}
         />
       )}
+
+      {/* FLOATING BOTTOM NAV */}
+      <BottomNav />
     </View>
   );
 }
@@ -195,170 +126,157 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0B0B0F",
-    paddingHorizontal: 20,
-    paddingTop: 55,
+    backgroundColor: COLORS.background,
   },
-
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: "#0B0B0F",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  loadingText: {
-    color: "#999",
-    marginTop: 12,
-    fontSize: 14,
-  },
-
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 25,
+    paddingTop: 50,
+    paddingHorizontal: SPACING.xl,
+    paddingBottom: SPACING.md,
+    backgroundColor: COLORS.backgroundSoft,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
-
   backButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#17171D",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 15,
+    alignSelf: "flex-start",
+    backgroundColor: COLORS.surfaceLight,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: RADIUS.sm,
+    marginBottom: SPACING.xs,
   },
-
-  backText: {
-    color: "#FFFFFF",
-    fontSize: 32,
-    marginTop: -4,
+  backButtonText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: "700",
   },
-
-  title: {
-    color: "#FFFFFF",
-    fontSize: 28,
-    fontWeight: "800",
+  headerBadge: {
+    color: COLORS.accent,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginBottom: 2,
   },
-
-  subtitle: {
-    color: "#777",
-    marginTop: 3,
+  headerTitle: {
+    fontSize: 26,
+    fontWeight: "900",
+    color: COLORS.white,
+    letterSpacing: -0.5,
+  },
+  headerSubtitle: {
     fontSize: 13,
+    color: COLORS.textMuted,
+    marginTop: 2,
   },
-
-  list: {
-    paddingBottom: 30,
+  listContainer: {
+    padding: SPACING.xl,
+    paddingBottom: 100,
+    gap: SPACING.md,
   },
-
   card: {
-    backgroundColor: "#15151B",
-    borderRadius: 20,
-    marginBottom: 18,
+    flexDirection: "row",
+    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.xl,
     overflow: "hidden",
   },
-
-  image: {
-    width: "100%",
-    height: 190,
+  dishImage: {
+    width: 110,
+    height: 110,
   },
-
-  imagePlaceholder: {
-    width: "100%",
-    height: 190,
-    backgroundColor: "#202027",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  placeholderText: {
-    fontSize: 50,
-  },
-
   cardContent: {
-    padding: 18,
+    flex: 1,
+    padding: SPACING.md,
+    justifyContent: "space-between",
   },
-
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   category: {
-    color: "#888",
-    fontSize: 11,
-    fontWeight: "700",
+    color: COLORS.accent,
+    fontSize: 10,
+    fontWeight: "900",
     letterSpacing: 1,
-    marginBottom: 6,
   },
-
+  heartButton: {
+    padding: 2,
+  },
+  heartIcon: {
+    fontSize: 16,
+  },
   dishName: {
-    color: "#FFFFFF",
-    fontSize: 22,
+    color: COLORS.white,
+    fontSize: 16,
     fontWeight: "800",
   },
-
-  restaurant: {
-    color: "#B5B5BD",
-    fontSize: 14,
-    marginTop: 5,
+  restaurantName: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
   },
-
-  description: {
-    color: "#777",
-    fontSize: 13,
-    lineHeight: 19,
-    marginTop: 12,
-  },
-
-  viewButton: {
-    marginTop: 15,
-    backgroundColor: "#24242C",
-    borderRadius: 12,
-    paddingVertical: 12,
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 4,
   },
-
-  viewButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
+  ratingText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
     fontWeight: "700",
   },
-
+  priceText: {
+    color: COLORS.accent,
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: COLORS.textMuted,
+    fontSize: 13,
+    marginTop: SPACING.sm,
+  },
   emptyContainer: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 30,
-    paddingBottom: 80,
+    alignItems: "center",
+    padding: SPACING.xxl,
   },
-
-  emptyHeart: {
-    color: "#555",
-    fontSize: 80,
-    marginBottom: 15,
+  emptyIcon: {
+    fontSize: 50,
+    marginBottom: SPACING.md,
   },
-
   emptyTitle: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    fontWeight: "800",
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    marginBottom: 6,
   },
-
-  emptyText: {
-    color: "#777",
+  emptySubtitle: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
     textAlign: "center",
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 10,
-    marginBottom: 25,
+    lineHeight: 19,
+    marginBottom: SPACING.xl,
+    maxWidth: 280,
   },
-
   exploreButton: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 25,
-    paddingVertical: 14,
-    borderRadius: 14,
+    backgroundColor: COLORS.accent,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: RADIUS.round,
   },
-
   exploreButtonText: {
-    color: "#0B0B0F",
-    fontWeight: "800",
-    fontSize: 14,
+    color: "#18181B",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: 0.5,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,21 +10,24 @@ import {
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { backend } from "../../lib/backend";
 
 export default function ReviewScreen() {
   const router = useRouter();
 
   const { id } = useLocalSearchParams();
+  const dishId = Number(Array.isArray(id) ? id[0] : id) || 101;
+  const dish = backend.getDishById(dishId);
 
-  const [overallRating, setOverallRating] = useState(0);
-  const [spiceLevel, setSpiceLevel] = useState(0);
-  const [saltLevel, setSaltLevel] = useState(0);
-  const [sweetnessLevel, setSweetnessLevel] = useState(0);
+  const [overallRating, setOverallRating] = useState(5);
+  const [spiceLevel, setSpiceLevel] = useState(3);
+  const [saltLevel, setSaltLevel] = useState(3);
+  const [sweetnessLevel, setSweetnessLevel] = useState(2);
 
   const [bestPart, setBestPart] = useState("");
   const [improvement, setImprovement] = useState("");
 
-  const submitReview = () => {
+  const submitReview = async () => {
     if (overallRating === 0) {
       Alert.alert(
         "Rating required",
@@ -33,9 +36,39 @@ export default function ReviewScreen() {
       return;
     }
 
+    let currentUser = backend.getCurrentUser();
+    if (!currentUser) {
+      currentUser = backend.quickGuestLogin("Stall Guest", "VIP");
+    }
+
+    await backend.addReview({
+      dish_id: dishId,
+      user_id: currentUser.id,
+      user_name: currentUser.name,
+      overall_rating: overallRating,
+      rating: overallRating,
+      spice_level: spiceLevel,
+      salt_level: saltLevel,
+      sugar_level: sweetnessLevel,
+      sweetness_level: sweetnessLevel,
+      review_text: `${bestPart} ${improvement}`.trim() || "Delicious dish!",
+      what_was_best: bestPart.trim() || "Taste and aroma",
+      what_to_improve: improvement.trim() || "None",
+    });
+
     Alert.alert(
-      "Review submitted!",
-      `Thank you for reviewing this dish.\nDish ID: ${id}`
+      "Review submitted! ⭐",
+      `Thank you for reviewing ${dish.name}.\nDish rating updated!`,
+      [
+        {
+          text: "View Dish",
+          onPress: () => router.replace({ pathname: "/restaurant", params: { id: String(dishId) } }),
+        },
+        {
+          text: "Dashboard",
+          onPress: () => router.replace("/dashboard"),
+        },
+      ]
     );
   };
 
@@ -72,11 +105,11 @@ export default function ReviewScreen() {
 
           <View>
             <Text style={styles.dishName}>
-              Chicken Biryani
+              {dish.name}
             </Text>
 
             <Text style={styles.restaurant}>
-              Spice Garden
+              {dish.restaurant_name}
             </Text>
           </View>
         </View>

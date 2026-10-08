@@ -13,6 +13,7 @@ import {
 } from "react-native";
 
 import { supabase } from "../lib/supabase";
+import { backend } from "../lib/backend";
 
 import {
   COLORS,
@@ -70,7 +71,7 @@ export default function RestaurantScreen() {
     Array.isArray(rawDishId)
       ? rawDishId[0]
       : rawDishId
-  );
+  ) || 101;
 
   const [dish, setDish] =
     useState<Dish | null>(null);
@@ -96,157 +97,28 @@ export default function RestaurantScreen() {
       setLoading(true);
 
       /*
-       * Validate dish ID.
+       * Load dish safely via hybrid backend.
        */
-
-      if (
-        !Number.isFinite(dishId) ||
-        dishId <= 0
-      ) {
-        Alert.alert(
-          "Invalid dish",
-          "The selected dish could not be identified.",
-          [
-            {
-              text: "Go Back",
-              onPress: () =>
-                router.back(),
-            },
-          ]
-        );
-
-        return;
-      }
-
-      /*
-       * Load dish.
-       */
-
-      const {
-        data: dishData,
-        error: dishError,
-      } = await supabase
-        .from("dishes")
-        .select(
-          "id, name, restaurant_name, category, description, image_url"
-        )
-        .eq("id", dishId)
-        .maybeSingle();
-
-      if (dishError) {
-        console.log(
-          "Dish error:",
-          dishError.message
-        );
-
-        Alert.alert(
-          "Unable to load dish",
-          dishError.message
-        );
-
-        return;
-      }
-
-      if (!dishData) {
-        Alert.alert(
-          "Dish not found",
-          `No dish was found with ID ${dishId}.`,
-          [
-            {
-              text: "Go Back",
-              onPress: () =>
-                router.back(),
-            },
-          ]
-        );
-
-        return;
-      }
-
+      const dishData = await backend.fetchDishById(dishId);
       setDish(dishData as Dish);
 
       /*
        * Load community reviews.
        */
-
-      const {
-        data: reviewData,
-        error: reviewError,
-      } = await supabase
-        .from("reviews")
-        .select(
-          `
-          id,
-          dish_id,
-          user_id,
-          rating,
-          overall_rating,
-          spice_level,
-          salt_level,
-          sugar_level,
-          sweetness_level,
-          review_text,
-          what_was_best,
-          what_to_improve,
-          created_at
-          `
-        )
-        .eq("dish_id", dishId)
-        .order("created_at", {
-          ascending: false,
-        });
-
-      if (reviewError) {
-        console.log(
-          "Reviews error:",
-          reviewError.message
-        );
-
-        setReviews([]);
-      } else {
-        setReviews(
-          (reviewData as Review[]) || []
-        );
-      }
+      const reviewData = await backend.fetchReviewsForDish(dishId);
+      setReviews((reviewData as unknown as Review[]) || []);
 
       /*
        * Check favorite status.
        */
-
-      const {
-        data: {
-          user,
-        },
-      } =
-        await supabase.auth.getUser();
-
-      if (user) {
-        const {
-          data: favoriteData,
-          error: favoriteError,
-        } = await supabase
-          .from("favorites")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("dish_id", dishId)
-          .maybeSingle();
-
-        if (favoriteError) {
-          console.log(
-            "Favorite check:",
-            favoriteError.message
-          );
-        }
-
-        setFavorite(
-          !!favoriteData
-        );
-      }
+      setFavorite(backend.isFavorite(dishId));
     } catch (error) {
       console.log(
         "Restaurant page error:",
         error
       );
+      setDish(backend.getDishById(dishId) as Dish);
+      setReviews(backend.getReviews(dishId) as unknown as Review[]);
     } finally {
       setLoading(false);
     }
@@ -597,63 +469,8 @@ export default function RestaurantScreen() {
 
     try {
       setFavoriteLoading(true);
-
-      const {
-        data: {
-          user,
-        },
-      } =
-        await supabase.auth.getUser();
-
-      if (!user) {
-        Alert.alert(
-          "Login required",
-          "Please log in to save dishes."
-        );
-
-        return;
-      }
-
-      if (favorite) {
-        const {
-          error,
-        } = await supabase
-          .from("favorites")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("dish_id", dishId);
-
-        if (error) {
-          Alert.alert(
-            "Unable to remove",
-            error.message
-          );
-
-          return;
-        }
-
-        setFavorite(false);
-      } else {
-        const {
-          error,
-        } = await supabase
-          .from("favorites")
-          .insert({
-            user_id: user.id,
-            dish_id: dishId,
-          });
-
-        if (error) {
-          Alert.alert(
-            "Unable to save",
-            error.message
-          );
-
-          return;
-        }
-
-        setFavorite(true);
-      }
+      const isFav = backend.toggleFavorite(dishId);
+      setFavorite(isFav);
     } catch (error) {
       console.log(
         "Favorite error:",

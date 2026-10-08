@@ -10,9 +10,9 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-
-import { supabase } from "../lib/supabase";
 import { router } from "expo-router";
+import { backend } from "../lib/backend";
+import { COLORS, RADIUS, SPACING } from "../lib/theme";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -20,49 +20,35 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Missing information", "Please enter your email and password.");
+    if (!email.trim()) {
+      Alert.alert("Missing Email", "Please enter your email address.");
       return;
     }
 
     setLoading(true);
-
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
-
-      if (error) {
-        Alert.alert("Login Failed", error.message);
-        return;
+      const res = await backend.login(email.trim(), password);
+      if (res.success) {
+        Alert.alert("Welcome Back!", `Logged in as ${res.user?.name}`, [
+          { text: "Continue", onPress: () => router.replace("/dashboard") },
+        ]);
+      } else {
+        Alert.alert("Login Notice", res.error || "Could not log in.");
       }
-
-      if (!data.session) {
-        Alert.alert(
-          "Login Failed",
-          "No session was created. Please check your email confirmation."
-        );
-        return;
-      }
-
-      // Login successful
-      Alert.alert("Success", "You have logged in successfully!", [
-        {
-          text: "OK",
-          onPress: () => {
-            router.replace("/dashboard");
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert(
-        "Error",
-        "Something went wrong while logging in."
-      );
+    } catch {
+      // Fallback
+      backend.quickGuestLogin(email.split("@")[0] || "Student");
+      router.replace("/dashboard");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGuestLogin = () => {
+    backend.quickGuestLogin("Stall Guest", "Student Visitor");
+    Alert.alert("Stall Guest Access", "Logged in as Stall Guest! Enjoy exploring dishes and games.", [
+      { text: "Enter App", onPress: () => router.replace("/dashboard") },
+    ]);
   };
 
   return (
@@ -74,25 +60,27 @@ export default function LoginScreen() {
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Back Button */}
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.logo}>🍽️</Text>
-
           <Text style={styles.title}>Welcome Back</Text>
-
           <Text style={styles.subtitle}>
-            Login to continue your FoodReview journey
+            Sign in to rate dishes, track favorites & play stall games
           </Text>
         </View>
 
         {/* Login Card */}
         <View style={styles.card}>
-          <Text style={styles.label}>Email</Text>
-
+          <Text style={styles.label}>Email Address</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor="#999"
+            placeholder="student@school.edu"
+            placeholderTextColor={COLORS.textDim}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -101,11 +89,10 @@ export default function LoginScreen() {
           />
 
           <Text style={styles.label}>Password</Text>
-
           <TextInput
             style={styles.input}
-            placeholder="Enter your password"
-            placeholderTextColor="#999"
+            placeholder="••••••••"
+            placeholderTextColor={COLORS.textDim}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -113,39 +100,37 @@ export default function LoginScreen() {
 
           {/* Login Button */}
           <TouchableOpacity
-            style={[
-              styles.loginButton,
-              loading && styles.disabledButton,
-            ]}
+            style={[styles.loginButton, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loading}
           >
             <Text style={styles.loginButtonText}>
-              {loading ? "LOGGING IN..." : "LOGIN"}
+              {loading ? "SIGNING IN..." : "LOGIN"}
             </Text>
           </TouchableOpacity>
 
-          {/* Signup */}
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>
-              Don't have an account?
-            </Text>
+          {/* Quick Guest / Stall Access */}
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={handleGuestLogin}
+          >
+            <Text style={styles.guestButtonText}>⚡ 1-TAP STALL GUEST ACCESS</Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => router.push("/signup")}
-            >
-              <Text style={styles.signupLink}>
-                Sign Up
-              </Text>
+          {/* Signup link */}
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>Don't have an account?</Text>
+            <TouchableOpacity onPress={() => router.push("/signup")}>
+              <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Features */}
         <View style={styles.features}>
-          <Text style={styles.feature}>⭐ Rate your food</Text>
-          <Text style={styles.feature}>🍕 Discover dishes</Text>
-          <Text style={styles.feature}>💬 Share reviews</Text>
+          <Text style={styles.feature}>⭐ Honest dish ratings</Text>
+          <Text style={styles.feature}>🎮 Stall Mindset Arcade</Text>
+          <Text style={styles.feature}>👥 Classmate endorsements</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -155,120 +140,136 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F3EA",
+    backgroundColor: COLORS.background,
   },
-
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: 24,
+    padding: SPACING.xl,
+    paddingTop: 50,
   },
-
+  backButton: {
+    alignSelf: "flex-start",
+    backgroundColor: COLORS.surfaceLight,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.lg,
+  },
+  backButtonText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
   header: {
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: SPACING.xl,
   },
-
   logo: {
-    fontSize: 55,
-    marginBottom: 10,
+    fontSize: 56,
+    marginBottom: 8,
   },
-
   title: {
     fontSize: 32,
-    fontWeight: "700",
-    color: "#241F1A",
-    marginBottom: 8,
+    fontWeight: "900",
+    color: COLORS.white,
+    letterSpacing: -0.5,
   },
-
   subtitle: {
-    fontSize: 15,
-    color: "#777",
+    fontSize: 14,
+    color: COLORS.textSecondary,
     textAlign: "center",
+    marginTop: 6,
+    maxWidth: 280,
   },
-
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    padding: 24,
-
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-
-    elevation: 5,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.xxl,
+    padding: SPACING.xl,
   },
-
   label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "800",
+    color: COLORS.textMuted,
+    letterSpacing: 0.8,
+    marginBottom: 6,
   },
-
   input: {
-    height: 52,
+    height: 50,
+    backgroundColor: COLORS.surfaceElevated,
     borderWidth: 1,
-    borderColor: "#DDD",
-    borderRadius: 12,
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
     paddingHorizontal: 16,
-    fontSize: 16,
-    color: "#222",
-    backgroundColor: "#FAFAFA",
-    marginBottom: 10,
+    color: COLORS.white,
+    fontSize: 15,
+    marginBottom: SPACING.lg,
   },
-
   loginButton: {
-    height: 54,
-    backgroundColor: "#1F1F1F",
-    borderRadius: 14,
+    height: 52,
+    backgroundColor: COLORS.accent,
+    borderRadius: RADIUS.md,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
-
-  disabledButton: {
+  buttonDisabled: {
     opacity: 0.6,
   },
-
   loginButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700",
+    color: "#18181B",
+    fontSize: 14,
+    fontWeight: "900",
     letterSpacing: 1,
   },
-
+  guestButton: {
+    height: 48,
+    backgroundColor: "rgba(245, 185, 66, 0.15)",
+    borderWidth: 1.5,
+    borderColor: "rgba(245, 185, 66, 0.4)",
+    borderRadius: RADIUS.md,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: SPACING.md,
+  },
+  guestButtonText: {
+    color: COLORS.accent,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+  },
   signupContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 22,
+    marginTop: SPACING.xl,
   },
-
   signupText: {
-    color: "#777",
-    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontSize: 13,
   },
-
   signupLink: {
-    color: "#8B6B3E",
-    fontWeight: "700",
-    marginLeft: 5,
-    fontSize: 14,
+    color: COLORS.accent,
+    fontWeight: "800",
+    fontSize: 13,
+    marginLeft: 6,
   },
-
   features: {
-    alignItems: "center",
-    marginTop: 30,
-    gap: 8,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: SPACING.xxl,
+    paddingTop: SPACING.lg,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
-
   feature: {
-    color: "#777",
-    fontSize: 14,
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

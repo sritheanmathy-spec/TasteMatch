@@ -1,640 +1,262 @@
-import React, { useState } from 'react';
-
+import React, { useState } from "react";
 import {
   View,
   Text,
   TextInput,
-  Pressable,
+  TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
-} from 'react-native';
-
-import { router } from 'expo-router';
-
-import { supabase } from '../lib/supabase';
-
+} from "react-native";
+import { router } from "expo-router";
+import { backend } from "../lib/backend";
+import { COLORS, RADIUS, SPACING } from "../lib/theme";
 
 export default function SignupScreen() {
-
-  const [name, setName] = useState('');
-
-  const [email, setEmail] = useState('');
-
-  const [password, setPassword] = useState('');
-
-  const [confirmPassword, setConfirmPassword] = useState('');
-
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-
-  // =====================================================
-  // SIGN UP FUNCTION
-  // =====================================================
-
-  async function signup() {
-
-    // Check name
+  const handleSignup = async () => {
     if (!name.trim()) {
-
-      Alert.alert(
-        'Missing Name',
-        'Please enter your name.'
-      );
-
+      Alert.alert("Missing Name", "Please enter your name.");
       return;
     }
-
-
-    // Check email
     if (!email.trim()) {
-
-      Alert.alert(
-        'Missing Email',
-        'Please enter your email address.'
-      );
-
+      Alert.alert("Missing Email", "Please enter your email address.");
       return;
     }
-
-
-    // Check password
-    if (!password) {
-
-      Alert.alert(
-        'Missing Password',
-        'Please enter a password.'
-      );
-
-      return;
-    }
-
-
-    // Check password length
-    if (password.length < 6) {
-
-      Alert.alert(
-        'Password Too Short',
-        'Your password must contain at least 6 characters.'
-      );
-
-      return;
-    }
-
-
-    // Check passwords
-    if (password !== confirmPassword) {
-
-      Alert.alert(
-        'Passwords Do Not Match',
-        'Please make sure both passwords are the same.'
-      );
-
-      return;
-    }
-
 
     setLoading(true);
-
-
     try {
-
-      // =================================================
-      // CREATE SUPABASE AUTH USER
-      // =================================================
-
-      const {
-        data,
-        error,
-      } = await supabase.auth.signUp({
-
-        email: email.trim(),
-
-        password: password,
-
-      });
-
-
-      // =================================================
-      // AUTH ERROR
-      // =================================================
-
-      if (error) {
-
-        Alert.alert(
-          'Signup Failed',
-          error.message
-        );
-
-        return;
+      const res = await backend.signup(name.trim(), email.trim(), password);
+      if (res.success) {
+        Alert.alert("Account Created! 🎉", `Welcome to TasteMatch, ${res.user?.name}!`, [
+          { text: "Get Started", onPress: () => router.replace("/dashboard") },
+        ]);
+      } else {
+        Alert.alert("Signup Notice", res.error || "Could not register account.");
       }
-
-
-      // =================================================
-      // CHECK USER
-      // =================================================
-
-      if (!data.user) {
-
-        Alert.alert(
-          'Signup Failed',
-          'The account could not be created.'
-        );
-
-        return;
-      }
-
-
-      // =================================================
-      // CREATE PROFILE
-      // =================================================
-
-      const {
-        error: profileError,
-      } = await supabase
-        .from('profiles')
-        .insert({
-
-          id: data.user.id,
-
-          name: name.trim(),
-
-          role: 'customer',
-
-        });
-
-
-      // =================================================
-      // PROFILE ERROR
-      // =================================================
-
-      if (profileError) {
-
-        console.log(
-          'PROFILE ERROR:',
-          profileError
-        );
-
-        Alert.alert(
-          'Profile Error',
-          profileError.message
-        );
-
-        return;
-      }
-
-
-      // =================================================
-      // SUCCESS
-      // =================================================
-
-      Alert.alert(
-        '🎉 Account Created!',
-        'Your FoodReview account has been created successfully.',
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-
-              router.replace('/' as any);
-
-            },
-          },
-        ]
-      );
-
-    } catch (error) {
-
-      console.log(
-        'SIGNUP ERROR:',
-        error
-      );
-
-      Alert.alert(
-        'Error',
-        'Something went wrong. Please try again.'
-      );
-
+    } catch {
+      backend.quickGuestLogin(name.trim() || "Student");
+      router.replace("/dashboard");
     } finally {
-
       setLoading(false);
-
     }
+  };
 
-  }
-
-
-  // =====================================================
-  // SCREEN
-  // =====================================================
+  const handleGuestLogin = () => {
+    backend.quickGuestLogin("Stall Guest", "Student Visitor");
+    Alert.alert("Stall Guest Access", "Logged in as Stall Guest!", [
+      { text: "Enter App", onPress: () => router.replace("/dashboard") },
+    ]);
+  };
 
   return (
-
-    <ScrollView
-      style={styles.scrollView}
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-
-      {/* =================================================
-          LOGO
-      ================================================= */}
-
-      <Text style={styles.logo}>
-        🍽️
-      </Text>
-
-
-      {/* =================================================
-          TITLE
-      ================================================= */}
-
-      <Text style={styles.title}>
-        Create Account
-      </Text>
-
-
-      <Text style={styles.subtitle}>
-        Join FoodReview and help restaurants
-        make their food better.
-      </Text>
-
-
-      {/* =================================================
-          NAME
-      ================================================= */}
-
-      <Text style={styles.label}>
-        Name
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your name"
-        placeholderTextColor="#999"
-        value={name}
-        onChangeText={setName}
-        autoCapitalize="words"
-      />
-
-
-      {/* =================================================
-          EMAIL
-      ================================================= */}
-
-      <Text style={styles.label}>
-        Email
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your email"
-        placeholderTextColor="#999"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-
-
-      {/* =================================================
-          PASSWORD
-      ================================================= */}
-
-      <Text style={styles.label}>
-        Password
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="At least 6 characters"
-        placeholderTextColor="#999"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoCapitalize="none"
-      />
-
-
-      {/* =================================================
-          CONFIRM PASSWORD
-      ================================================= */}
-
-      <Text style={styles.label}>
-        Confirm Password
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your password again"
-        placeholderTextColor="#999"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        autoCapitalize="none"
-      />
-
-
-      {/* =================================================
-          CREATE ACCOUNT BUTTON
-      ================================================= */}
-
-      <Pressable
-        style={[
-          styles.signupButton,
-          loading && styles.disabledButton,
-        ]}
-        onPress={signup}
-        disabled={loading}
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
       >
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
 
-        {loading ? (
+        <View style={styles.header}>
+          <Text style={styles.logo}>🍽️</Text>
+          <Text style={styles.title}>Join TasteMatch</Text>
+          <Text style={styles.subtitle}>
+            Create your foodie profile and rate dishes around school
+          </Text>
+        </View>
 
-          <ActivityIndicator
-            color="#FFFFFF"
-            size="small"
+        <View style={styles.card}>
+          <Text style={styles.label}>Your Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. Rahul Sharma"
+            placeholderTextColor={COLORS.textDim}
+            value={name}
+            onChangeText={setName}
           />
 
-        ) : (
+          <Text style={styles.label}>Email Address</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="rahul@school.edu"
+            placeholderTextColor={COLORS.textDim}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            onChangeText={setEmail}
+          />
 
-          <Text style={styles.signupButtonText}>
-            CREATE ACCOUNT
-          </Text>
+          <Text style={styles.label}>Password (Optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="••••••••"
+            placeholderTextColor={COLORS.textDim}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-        )}
+          <TouchableOpacity
+            style={[styles.signupButton, loading && styles.buttonDisabled]}
+            onPress={handleSignup}
+            disabled={loading}
+          >
+            <Text style={styles.signupButtonText}>
+              {loading ? "CREATING PROFILE..." : "CREATE ACCOUNT"}
+            </Text>
+          </TouchableOpacity>
 
-      </Pressable>
+          <TouchableOpacity
+            style={styles.guestButton}
+            onPress={handleGuestLogin}
+          >
+            <Text style={styles.guestButtonText}>⚡ SKIP & ENTER AS STALL GUEST</Text>
+          </TouchableOpacity>
 
-
-      {/* =================================================
-          LOGIN
-      ================================================= */}
-
-      <View style={styles.loginContainer}>
-
-        <Text style={styles.loginText}>
-          Already have an account?
-        </Text>
-
-
-        <Pressable
-          onPress={() =>
-            router.replace('/login' as any)
-          }
-        >
-
-          <Text style={styles.loginLink}>
-            Login
-          </Text>
-
-        </Pressable>
-
-      </View>
-
-
-      {/* =================================================
-          INFORMATION
-      ================================================= */}
-
-      <View style={styles.infoBox}>
-
-        <Text style={styles.infoTitle}>
-          🔐 Your account
-        </Text>
-
-        <Text style={styles.infoText}>
-          Your account lets you submit reviews
-          and keep track of your FoodReview activity.
-        </Text>
-
-      </View>
-
-
-    </ScrollView>
-
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Already registered?</Text>
+            <TouchableOpacity onPress={() => router.push("/login")}>
+              <Text style={styles.loginLink}>Log In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-
-// =====================================================
-// STYLES
-// =====================================================
-
 const styles = StyleSheet.create({
-
-  scrollView: {
-    flex: 1,
-
-    backgroundColor: '#FFF9F0',
-  },
-
-
   container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  scrollContainer: {
     flexGrow: 1,
-
-    paddingHorizontal: 25,
-
-    paddingTop: 55,
-
-    paddingBottom: 50,
-
-    justifyContent: 'center',
+    justifyContent: "center",
+    padding: SPACING.xl,
+    paddingTop: 50,
   },
-
-
-  // ===================================================
-  // LOGO
-  // ===================================================
-
-  logo: {
-    fontSize: 55,
-
-    textAlign: 'center',
-
-    marginBottom: 5,
+  backButton: {
+    alignSelf: "flex-start",
+    backgroundColor: COLORS.surfaceLight,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.lg,
   },
-
-
-  // ===================================================
-  // TITLE
-  // ===================================================
-
-  title: {
-    fontSize: 29,
-
-    fontWeight: '800',
-
-    textAlign: 'center',
-
-    color: '#222',
-
-    marginTop: 5,
-  },
-
-
-  subtitle: {
+  backButtonText: {
+    color: COLORS.textSecondary,
     fontSize: 13,
-
-    lineHeight: 20,
-
-    textAlign: 'center',
-
-    color: '#888',
-
-    marginTop: 8,
-
-    marginBottom: 25,
-
-    paddingHorizontal: 10,
+    fontWeight: "700",
   },
-
-
-  // ===================================================
-  // LABEL
-  // ===================================================
-
-  label: {
+  header: {
+    alignItems: "center",
+    marginBottom: SPACING.xl,
+  },
+  logo: {
+    fontSize: 56,
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: COLORS.white,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
     fontSize: 14,
-
-    fontWeight: '700',
-
-    color: '#333',
-
-    marginTop: 11,
-
-    marginBottom: 7,
+    color: COLORS.textSecondary,
+    textAlign: "center",
+    marginTop: 6,
+    maxWidth: 280,
   },
-
-
-  // ===================================================
-  // INPUT
-  // ===================================================
-
+  card: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.xxl,
+    padding: SPACING.xl,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: COLORS.textMuted,
+    letterSpacing: 0.8,
+    marginBottom: 6,
+  },
   input: {
-    height: 52,
-
-    backgroundColor: '#FFFFFF',
-
+    height: 50,
+    backgroundColor: COLORS.surfaceElevated,
     borderWidth: 1,
-
-    borderColor: '#E5E5E5',
-
-    borderRadius: 13,
-
-    paddingHorizontal: 15,
-
+    borderColor: COLORS.borderLight,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 16,
+    color: COLORS.white,
     fontSize: 15,
-
-    color: '#222',
+    marginBottom: SPACING.lg,
   },
-
-
-  // ===================================================
-  // SIGNUP BUTTON
-  // ===================================================
-
   signupButton: {
-    height: 53,
-
-    backgroundColor: '#222',
-
-    borderRadius: 13,
-
-    alignItems: 'center',
-
-    justifyContent: 'center',
-
-    marginTop: 25,
+    height: 52,
+    backgroundColor: COLORS.accent,
+    borderRadius: RADIUS.md,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
-
-
-  disabledButton: {
+  buttonDisabled: {
     opacity: 0.6,
   },
-
-
   signupButtonText: {
-    color: '#FFFFFF',
-
+    color: "#18181B",
     fontSize: 14,
-
-    fontWeight: '800',
-
-    letterSpacing: 0.5,
+    fontWeight: "900",
+    letterSpacing: 1,
   },
-
-
-  // ===================================================
-  // LOGIN
-  // ===================================================
-
-  loginContainer: {
-    flexDirection: 'row',
-
-    justifyContent: 'center',
-
-    alignItems: 'center',
-
-    marginTop: 21,
+  guestButton: {
+    height: 48,
+    backgroundColor: "rgba(245, 185, 66, 0.15)",
+    borderWidth: 1.5,
+    borderColor: "rgba(245, 185, 66, 0.4)",
+    borderRadius: RADIUS.md,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: SPACING.md,
   },
-
-
-  loginText: {
-    color: '#777',
-
-    fontSize: 14,
-  },
-
-
-  loginLink: {
-    color: '#B66C00',
-
-    fontSize: 14,
-
-    fontWeight: '800',
-
-    marginLeft: 5,
-  },
-
-
-  // ===================================================
-  // INFO BOX
-  // ===================================================
-
-  infoBox: {
-    marginTop: 25,
-
-    padding: 15,
-
-    borderRadius: 14,
-
-    backgroundColor: '#FFF1D0',
-
-    borderWidth: 1,
-
-    borderColor: '#FFE0A0',
-  },
-
-
-  infoTitle: {
-    fontSize: 14,
-
-    fontWeight: '800',
-
-    color: '#8A5700',
-
-    marginBottom: 5,
-  },
-
-
-  infoText: {
+  guestButtonText: {
+    color: COLORS.accent,
     fontSize: 12,
-
-    lineHeight: 18,
-
-    color: '#8A6A32',
+    fontWeight: "900",
+    letterSpacing: 0.8,
   },
-
+  loginContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: SPACING.xl,
+  },
+  loginText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+  },
+  loginLink: {
+    color: COLORS.accent,
+    fontWeight: "800",
+    fontSize: 13,
+    marginLeft: 6,
+  },
 });

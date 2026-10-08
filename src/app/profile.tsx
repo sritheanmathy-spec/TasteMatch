@@ -12,6 +12,7 @@ import {
 import { router } from "expo-router";
 
 import { supabase } from "../lib/supabase";
+import { backend } from "../lib/backend";
 
 import {
   COLORS,
@@ -29,8 +30,8 @@ import {
 
 
 type Review = {
-  id: number;
-  user_id: string;
+  id: string | number;
+  user_id?: string | null;
   rating: number | null;
   overall_rating: number | null;
   spice_level: number | null;
@@ -202,100 +203,27 @@ export default function FoodProfileScreen() {
   async function loadFoodProfile() {
 
     try {
-
       setLoading(true);
 
-
-      /* GET CURRENT USER */
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-
-      if (!user) {
-        router.replace("/");
-        return;
-      }
-
-
       /* GET USER REVIEWS */
+      const userReviews = backend.getReviews();
+      setReviews((userReviews as unknown as Review[]) || []);
 
-      const {
-        data: reviewData,
-        error: reviewError,
-      } = await supabase
-        .from("reviews")
-        .select(
-          `
-            id,
-            user_id,
-            rating,
-            overall_rating,
-            spice_level,
-            salt_level,
-            sugar_level,
-            sweetness_level
-          `
-        )
-        .eq("user_id", user.id);
-
-
-      if (reviewError) {
-
-        console.log(
-          "Food profile review error:",
-          reviewError
-        );
-
+      /* GET RECOMMENDATIONS */
+      try {
+        const recommended = await getRecommendations();
+        setRecommendations(recommended || []);
+      } catch (recErr) {
+        console.log("Rec error:", recErr);
       }
-
-
-      setReviews(
-        reviewData || []
-      );
-
-
-      /*
-
-        IMPORTANT:
-
-        Your current recommendations.ts
-        defines getRecommendations()
-        without an argument.
-
-        Therefore DO NOT use:
-
-        getRecommendations(user.id)
-
-        Use:
-
-        getRecommendations()
-
-      */
-
-      const recommended =
-        await getRecommendations();
-
-
-      setRecommendations(
-        recommended || []
-      );
-
-
     } catch (error) {
-
       console.log(
         "Food profile error:",
         error
       );
-
     } finally {
-
       setLoading(false);
-
     }
-
   }
 
 

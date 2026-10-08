@@ -12,6 +12,7 @@ import {
 import { router } from "expo-router";
 
 import { supabase } from "../lib/supabase";
+import { backend } from "../lib/backend";
 
 import {
     COLORS,
@@ -28,8 +29,8 @@ import {
 } from "../lib/recommendations";
 
 type Review = {
-  id: number;
-  user_id: string;
+  id: number | string;
+  user_id?: string | null;
   rating: number | null;
   overall_rating: number | null;
   spice_level: number | null;
@@ -150,41 +151,10 @@ export default function FoodProfileScreen() {
     try {
       setLoading(true);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const userReviews = backend.getReviews();
+      setReviews((userReviews as unknown as Review[]) || []);
 
-      if (!user) {
-        router.replace("/");
-        return;
-      }
-
-      const { data: reviewData, error } =
-        await supabase
-          .from("reviews")
-          .select(
-            `
-              id,
-              user_id,
-              rating,
-              overall_rating,
-              spice_level,
-              salt_level,
-              sugar_level,
-              sweetness_level
-            `
-          )
-          .eq("user_id", user.id);
-
-      if (error) {
-        console.log("Food profile review error:", error);
-      }
-
-      setReviews(reviewData || []);
-
-      const recommended =
-        await getRecommendations(user.id);
-
+      const recommended = await getRecommendations();
       setRecommendations(recommended || []);
     } catch (error) {
       console.log("Food profile error:", error);

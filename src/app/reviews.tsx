@@ -11,18 +11,19 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '../lib/supabase';
+import { backend } from '../lib/backend';
 
 const GOLD = '#D6A84F';
 
 type Review = {
-  id: string;
+  id: string | number;
   rating: number;
   spice_level?: number;
   salt_level?: number;
   sugar_level?: number;
   review_text?: string;
   created_at?: string;
-  dish_id?: string;
+  dish_id?: string | number;
 };
 
 export default function ReviewsScreen() {
@@ -36,28 +37,11 @@ export default function ReviewsScreen() {
   async function loadReviews() {
     try {
       setLoading(true);
-
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .order('created_at', {
-          ascending: false,
-        });
-
-      if (error) {
-        console.log('REVIEWS ERROR:', error);
-
-        Alert.alert(
-          'Could not load reviews',
-          error.message
-        );
-
-        return;
-      }
-
-      setReviews(data || []);
+      const data = await backend.fetchReviewsForDish();
+      setReviews((data as unknown as Review[]) || []);
     } catch (error) {
-      console.log(error);
+      console.log('REVIEWS ERROR:', error);
+      setReviews((backend.getReviews() as unknown as Review[]) || []);
     } finally {
       setLoading(false);
     }

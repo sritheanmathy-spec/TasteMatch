@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { MOCK_DISHES } from "./mockData";
 
 export type RecommendedDish = {
   id: number;
@@ -54,49 +55,43 @@ export async function getRecommendations(
     let currentUserId = userId;
 
     if (!currentUserId) {
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      currentUserId = user?.id;
-
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        currentUserId = user?.id;
+      } catch {}
     }
 
 
     /* -------------------------------------------------
        GET ALL DISHES
     ------------------------------------------------- */
+    let dishes: Dish[] = [];
 
-    const {
-      data: dishes,
-      error: dishesError,
-    } = await supabase
-      .from("dishes")
-      .select(
-        `
-          id,
-          name,
-          restaurant_name,
-          category,
-          description,
-          image_url
-        `
-      );
-
-
-    if (dishesError) {
-      console.log(
-        "Recommendation dishes error:",
-        dishesError
-      );
-
-      return [];
-    }
-
+    try {
+      const {
+        data,
+        error: dishesError,
+      } = await supabase
+        .from("dishes")
+        .select(
+          `
+            id,
+            name,
+            restaurant_name,
+            category,
+            description,
+            image_url
+          `
+        );
+      if (!dishesError && data && data.length > 0) {
+        dishes = data;
+      }
+    } catch {}
 
     if (!dishes || dishes.length === 0) {
-      return [];
+      dishes = MOCK_DISHES;
     }
 
 
@@ -656,6 +651,20 @@ export async function getRecommendations(
        RETURN TOP RESULTS
     ------------------------------------------------- */
 
+    if (results.length === 0) {
+      return MOCK_DISHES.slice(0, 6).map((d, index) => ({
+        id: d.id,
+        name: d.name,
+        restaurant_name: d.restaurant_name,
+        category: d.category,
+        description: d.description,
+        image_url: d.image_url,
+        matchScore: 95 - index * 3,
+        reasons: ["Campus Favorite", "Stall Special Choice"],
+        communityRating: d.averageRating || 4.8,
+      }));
+    }
+
     return results.slice(
       0,
       10
@@ -669,7 +678,17 @@ export async function getRecommendations(
       error
     );
 
-    return [];
+    return MOCK_DISHES.slice(0, 6).map((d, index) => ({
+      id: d.id,
+      name: d.name,
+      restaurant_name: d.restaurant_name,
+      category: d.category,
+      description: d.description,
+      image_url: d.image_url,
+      matchScore: 92 - index * 2,
+      reasons: ["Popular on Campus"],
+      communityRating: d.averageRating || 4.8,
+    }));
 
   }
 
